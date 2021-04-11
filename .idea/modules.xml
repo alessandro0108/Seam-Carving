@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Seam_Carving.iml" filepath="$PROJECT_DIR$/.idea/modules/Seam_Carving.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Accordance/Seam_Carving.Problems-Accordance.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Accordance/Seam_Carving.Problems-Accordance.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Accordance/Seam_Carving.Problems-Accordance.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Accordance/Seam_Carving.Problems-Accordance.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Accordance/Seam_Carving.Problems-Accordance.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Accordance/Seam_Carving.Problems-Accordance.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Calculator with four functions/Seam_Carving.Problems-Calculator_with_four_functions.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Calculator with four functions/Seam_Carving.Problems-Calculator_with_four_functions.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Calculator with four functions/Seam_Carving.Problems-Calculator_with_four_functions.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Calculator with four functions/Seam_Carving.Problems-Calculator_with_four_functions.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Calculator with four functions/Seam_Carving.Problems-Calculator_with_four_functions.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Calculator with four functions/Seam_Carving.Problems-Calculator_with_four_functions.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Create a full name/Seam_Carving.Problems-Create_a_full_name.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Create a full name/Seam_Carving.Problems-Create_a_full_name.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Create a full name/Seam_Carving.Problems-Create_a_full_name.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Create a full name/Seam_Carving.Problems-Create_a_full_name.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Create a full name/Seam_Carving.Problems-Create_a_full_name.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Create a full name/Seam_Carving.Problems-Create_a_full_name.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Cube of zeros/Seam_Carving.Problems-Cube_of_zeros.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Cube of zeros/Seam_Carving.Problems-Cube_of_zeros.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Cube of zeros/Seam_Carving.Problems-Cube_of_zeros.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Cube of zeros/Seam_Carving.Problems-Cube_of_zeros.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Cube of zeros/Seam_Carving.Problems-Cube_of_zeros.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Cube of zeros/Seam_Carving.Problems-Cube_of_zeros.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Decompose a math function/Seam_Carving.Problems-Decompose_a_math_function.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Decompose a math function/Seam_Carving.Problems-Decompose_a_math_function.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Decompose a math function/Seam_Carving.Problems-Decompose_a_math_function.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Decompose a math function/Seam_Carving.Problems-Decompose_a_math_function.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Decompose a math function/Seam_Carving.Problems-Decompose_a_math_function.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Decompose a math function/Seam_Carving.Problems-Decompose_a_math_function.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Fabric manufacture/Seam_Carving.Problems-Fabric_manufacture.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Fabric manufacture/Seam_Carving.Problems-Fabric_manufacture.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Fabric manufacture/Seam_Carving.Problems-Fabric_manufacture.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Fabric manufacture/Seam_Carving.Problems-Fabric_manufacture.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Fabric manufacture/Seam_Carving.Problems-Fabric_manufacture.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Fabric manufacture/Seam_Carving.Problems-Fabric_manufacture.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Frozen desserts/Seam_Carving.Problems-Frozen_desserts.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Frozen desserts/Seam_Carving.Problems-Frozen_desserts.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Frozen desserts/Seam_Carving.Problems-Frozen_desserts.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Frozen desserts/Seam_Carving.Problems-Frozen_desserts.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Frozen desserts/Seam_Carving.Problems-Frozen_desserts.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Frozen desserts/Seam_Carving.Problems-Frozen_desserts.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Kotlin arrays/Seam_Carving.Problems-Kotlin_arrays.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Kotlin arrays/Seam_Carving.Problems-Kotlin_arrays.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Kotlin arrays/Seam_Carving.Problems-Kotlin_arrays.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Kotlin arrays/Seam_Carving.Problems-Kotlin_arrays.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Problems/Kotlin arrays/Seam_Carving.Problems-Kotlin_arrays.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Problems/Kotlin arrays/Seam_Carving.Problems-Kotlin_arrays.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Seam Carving/task/Seam_Carving.Seam_Carving-task.iml" filepath="$PROJECT_DIR$/.idea/modules/Seam Carving/task/Seam_Carving.Seam_Carving-task.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Seam Carving/task/Seam_Carving.Seam_Carving-task.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Seam Carving/task/Seam_Carving.Seam_Carving-task.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Seam Carving/task/Seam_Carving.Seam_Carving-task.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Seam Carving/task/Seam_Carving.Seam_Carving-task.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/util/Seam_Carving.util.iml" filepath="$PROJECT_DIR$/.idea/modules/util/Seam_Carving.util.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/util/Seam_Carving.util.main.iml" filepath="$PROJECT_DIR$/.idea/modules/util/Seam_Carving.util.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/util/Seam_Carving.util.test.iml" filepath="$PROJECT_DIR$/.idea/modules/util/Seam_Carving.util.test.iml" />
+    </modules>
+  </component>
+</project>

@@ -1,0 +1,408 @@
+type: edu
+custom_name: stage6
+files:
+- name: src/seamcarving/Main.kt
+  visible: true
+  text: |
+    package seamcarving
+
+    fun main() {
+        print("Hello, World!")
+    }
+  learner_created: false
+- name: test/SeamCarvingTest.java
+  visible: false
+  text: |
+    import org.apache.commons.codec.binary.Hex;
+    import org.hyperskill.hstest.testcase.TestCase;
+    import org.hyperskill.hstest.stage.StageTest;
+    import org.hyperskill.hstest.testcase.CheckResult;
+
+    import javax.imageio.ImageIO;
+    import java.awt.image.BufferedImage;
+    import java.io.ByteArrayOutputStream;
+    import java.io.File;
+    import java.io.FileInputStream;
+    import java.io.IOException;
+    import java.security.MessageDigest;
+    import java.security.NoSuchAlgorithmException;
+    import java.util.Arrays;
+    import java.util.List;
+
+    class CheckFailException extends Exception {
+        public CheckFailException(String s) {
+            super(s);
+        }
+    }
+
+    class OutFile {
+        String hash;
+        String filename;
+        int width;
+        int height;
+
+        OutFile(String filename, int width, int height, String hash) {
+            this.filename = filename;
+            this.width = width;
+            this.height = height;
+            this.hash = hash;
+        }
+
+        public boolean compareWithActualMD5() throws CheckFailException {
+            try {
+                File imgPath = new File(filename);
+                BufferedImage sourceImage = ImageIO.read(imgPath);
+
+                BufferedImage rgbImage =
+                    new BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+                for (int i = 0; i < sourceImage.getWidth(); i++) {
+                    for (int j = 0; j < sourceImage.getHeight(); j++) {
+                        rgbImage.setRGB(i, j, sourceImage.getRGB(i, j));
+                    }
+                }
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ImageIO.write(rgbImage, "bmp", baos);
+
+                MessageDigest md = MessageDigest.getInstance("MD5");
+                md.update(baos.toByteArray());
+                byte[] digest = md.digest();
+                String actualHash = Hex.encodeHexString(digest);
+                if (!actualHash.equalsIgnoreCase(hash)) {
+                    throw new CheckFailException(
+                        String.format(
+                            "Hash sum of your image (%s) does not match expected value",
+                            actualHash));
+                }
+            } catch (IOException e) {
+                throw new CheckFailException(
+                    String.format(
+                        "Could not read output file '%s'. Please check you produce output file",
+                        filename));
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+                throw new CheckFailException("Internal test error. please report to Hyperskill team");
+            }
+
+            return true;
+        }
+
+        public boolean compareActualDimensions() throws CheckFailException {
+            try {
+                BufferedImage image = ImageIO.read(new File(filename));
+
+                if (image == null) {
+                    throw new CheckFailException(
+                        String.format(
+                            "File format error. Looks like your output '%s' is not a valid image file.",
+                            filename));
+                }
+
+                if (image.getWidth() != width) {
+                    throw new CheckFailException(
+                        String.format(
+                            "Dimensions mismatch. Output image width: %d; expected width: %d",
+                            image.getWidth(), width));
+                }
+
+                if (image.getHeight() != height) {
+                    throw new CheckFailException(
+                        String.format(
+                            "Dimensions mismatch. Output image height: %d; expected height: %d",
+                            image.getHeight(), height));
+                }
+
+            } catch (IOException e) {
+                throw new CheckFailException(
+                    String.format(
+                        "Could not read output file '%s'. Please check you produce output file",
+                        filename));
+            }
+
+            return true;
+        }
+    }
+
+    public class SeamCarvingTest extends StageTest<OutFile> {
+
+        @Override
+        public List<TestCase<OutFile>> generate() {
+
+            return Arrays.asList(
+                new TestCase<OutFile>()
+                    .addArguments(
+                        "-in", "test/small.png",
+                        "-out", "test/small-reduced.png",
+                        "-width", "1",
+                        "-height", "1")
+                    .setAttach(new OutFile(
+                        "test/small-reduced.png", 14, 9,
+                        "3e0266a991347682591a4955c9b2dd8e"))
+                    .setTimeLimit(2 * 60 * 1000),
+
+                new TestCase<OutFile>()
+                    .addArguments(
+                        "-in", "test/blue.png",
+                        "-out", "test/blue-reduced.png",
+                        "-width", "125",
+                        "-height", "50")
+                    .setAttach(new OutFile(
+                        "test/blue-reduced.png", 375, 284,
+                        "e73c04ad79d30ebef82b27f35b71dd92"))
+                    .setTimeLimit(2 * 60 * 1000),
+
+                new TestCase<OutFile>()
+                    .addArguments(
+                        "-in", "test/trees.png",
+                        "-out", "test/trees-reduced.png",
+                        "-width", "100",
+                        "-height", "30")
+                    .setAttach(new OutFile(
+                        "test/trees-reduced.png", 500, 399,
+                        "65603cba81d3ee6dedeeb5777d6665c5"))
+                    .setTimeLimit(2 * 60 * 1000)
+            );
+        }
+
+        @Override
+        public CheckResult check(String reply, OutFile expectedFile) {
+            try {
+                expectedFile.compareActualDimensions();
+                //expectedFile.compareWithActualMD5();
+            } catch (CheckFailException e) {
+                return CheckResult.wrong(e.getMessage());
+            }
+
+            return CheckResult.correct();
+        }
+    }
+  learner_created: false
+- name: test/blue.png
+  visible: false
+  learner_created: false
+- name: test/small.png
+  visible: false
+  learner_created: false
+- name: test/trees.png
+  visible: false
+  learner_created: false
+- name: src/seamcarving/SeamFinder.kt
+  visible: true
+  text: |-
+    package seamcarving
+
+    class SeamFinder {
+        val matrix: Array<Array<EnergyPoint>>
+        val matrixTransposed: Array<Array<EnergyPoint>>
+
+        constructor(matrix: Array<Array<EnergyPoint>>) {
+            this.matrix = matrix
+            this.matrixTransposed = transpose(matrix)
+        }
+
+        private fun transpose(matrix: Array<Array<EnergyPoint>>): Array<Array<EnergyPoint>> {
+            val tpMatrix = Array(matrix[0].size) { Array<EnergyPoint>(size = matrix.size) { EnergyPoint() } }
+            for (i in matrix.indices)
+                for (j in matrix[0].indices) {
+                    tpMatrix[j][i].energy = matrix[i][j].energy
+                }
+            return tpMatrix
+        }
+
+        fun getVerticalSeam(): IntArray {
+            return getSeam(matrix)
+        }
+
+        fun getHorizontalSeam(): IntArray {
+            return getSeam(matrixTransposed)
+        }
+
+        private fun getSeam(matrix: Array<Array<EnergyPoint>>): IntArray {
+            val INF = Double.MAX_VALUE
+            val workingMatrix = Array(matrix.size) { Array<EnergyPoint>(size = matrix[0].size) { EnergyPoint() } }
+
+            // calculates the cumulative energy matrix: each pixel's energy is summed to the minimum
+            // energy of the 3 pixels above it (coordinates j-1, j, j+1)
+            for (i in matrix.indices)
+                for (j in matrix[0].indices) {
+                    if (i == 0)
+                        workingMatrix[i][j].energy = matrix[i][j].energy
+                    else {
+                        val aboveEnergy = workingMatrix[i -1][j].energy
+                        val aboveLeftEnergy = if (j > 0) workingMatrix[i - 1][j - 1].energy else INF
+                        val aboveRightEnergy = if (j < workingMatrix[0].size - 1) workingMatrix[i - 1][j + 1].energy else INF
+
+                        var minEnergy = aboveEnergy
+                        var minJ = j
+                        if (aboveLeftEnergy < minEnergy) {
+                            minEnergy = aboveLeftEnergy
+                            minJ = j - 1
+                        }
+                        if (aboveRightEnergy < minEnergy) {
+                            minEnergy = aboveRightEnergy
+                            minJ = j + 1
+                        }
+                        workingMatrix[i][j].energy = matrix[i][j].energy + minEnergy
+                        workingMatrix[i][j].prevX = minJ
+                    }
+                }
+
+            // the lowest energy seam is the one with the minimum cumulative energy in the last row
+            // of the matrix
+            var minEnergy = INF
+            var minJ = -1
+            val lastRowIndex = workingMatrix.size - 1
+            for (j in workingMatrix[0].indices) {
+                 if (workingMatrix[lastRowIndex][j].energy < minEnergy) {
+                    minJ = j
+                    minEnergy = workingMatrix[lastRowIndex][j].energy
+                }
+            }
+            println("minEnergy = $minEnergy; minJ = $minJ")
+
+            val seamArray = IntArray(workingMatrix.size)
+            seamArray[lastRowIndex] = minJ
+            var seamEnergy = workingMatrix[lastRowIndex][minJ].energy
+
+            for (i in lastRowIndex - 1 downTo 0) {
+                seamArray[i] = workingMatrix[i + 1][seamArray[i + 1]].prevX
+                seamEnergy += matrix[i][seamArray[i]].energy
+            }
+
+            println("seamEnergy = $seamEnergy")
+
+            return seamArray
+        }
+    }
+  learner_created: true
+- name: src/seamcarving/EnergyCalculator.kt
+  visible: true
+  text: |-
+    package seamcarving
+
+    import java.awt.Color
+    import java.awt.image.BufferedImage
+
+    class EnergyCalculator(val image: BufferedImage) {
+        var maxEnergy: Double = 0.0
+        val energyMatrix = Array(image.height) { Array<EnergyPoint>(size = image.width) { EnergyPoint() } }
+
+        fun calcEnergyMatrix() {
+            maxEnergy = 0.0
+
+            for (x in 0 until image.getWidth())
+                for (y in 0 until image.getHeight()) {
+                    val energy: Double = getEnergy(x, y)
+                    if (energy > maxEnergy) {
+                        maxEnergy = energy
+                    }
+                    energyMatrix[y][x].energy = energy
+                }
+        }
+
+        fun getTestEnergyMatrix1(): Array<Array<EnergyPoint>> {
+            val test1e = arrayOf(
+                    arrayOf(5, 5, 3, 5),
+                    arrayOf(3, 3, 4, 4),
+                    arrayOf(4, 6, 0, 2),
+                    arrayOf(1, 5, 4, 0),
+                    arrayOf(3, 4, 4, 0),
+            )       // seam: 3, 3, 0, 0, 0
+
+            return createTestEnergyMatrix(test1e)
+        }
+
+        fun getTestEnergyMatrix2(): Array<Array<EnergyPoint>> {
+            val test1e = arrayOf(
+                    arrayOf(1, 4, 3, 5, 2),
+                    arrayOf(3, 2, 5, 2, 3),
+                    arrayOf(5, 2, 4, 2, 1),
+            )       // seam: 1, 2, 2
+
+            return createTestEnergyMatrix(test1e)
+        }
+
+        private fun createTestEnergyMatrix(testMatrix: Array<Array<Int>>): Array<Array<EnergyPoint>> {
+            val matrix = Array(testMatrix.size) { Array<EnergyPoint>(testMatrix[0].size) { EnergyPoint() } }
+
+            for (i in testMatrix.indices)
+                for (j in testMatrix[0].indices)
+                    matrix[i][j].energy = testMatrix[i][j].toDouble()
+
+            return matrix
+        }
+
+        private fun getEnergy(x: Int, y: Int): Double {
+            val gradX: Double = getGradientX(x, y)
+            val gradY: Double = getGradientY(x, y)
+            return Math.sqrt(gradX + gradY)
+        }
+
+        private fun getGradientX(x: Int, y: Int): Double {
+            val x1 = adjustBorderX(x)
+            val c1 = Color(image.getRGB(x1 + 1, y))
+            val c2 = Color(image.getRGB(x1 - 1, y))
+            return getSquareGradient(c1, c2)
+        }
+
+        private fun getGradientY(x: Int, y: Int): Double {
+            val y1 = adjustBorderY(y)
+            val c1 = Color(image.getRGB(x, y1 + 1))
+            val c2 = Color(image.getRGB(x, y1 - 1))
+            return getSquareGradient(c1, c2)
+        }
+
+        private fun adjustBorderX(x: Int): Int {
+            return when (x) {
+                0 -> x + 1;
+                image.width - 1 -> x - 1
+                else -> x
+            }
+        }
+
+        private fun adjustBorderY(y: Int): Int {
+            return when (y) {
+                0 -> y + 1;
+                image.height - 1 -> y - 1
+                else -> y
+            }
+        }
+
+        private fun getSquareGradient(c1: Color, c2: Color): Double {
+            return Math.pow((c1.red - c2.red).toDouble(), 2.0) +
+                    Math.pow((c1.green - c2.green).toDouble(), 2.0) +
+                    Math.pow((c1.blue - c2.blue).toDouble(), 2.0)
+        }
+
+
+
+    }
+  learner_created: true
+- name: src/seamcarving/EnergyPoint.kt
+  visible: true
+  text: |-
+    package seamcarving
+
+    class EnergyPoint {
+        var energy: Double = 0.0
+        var prevX = -1
+    }
+  learner_created: true
+- name: src/seamcarving/ImageProcessor.kt
+  visible: true
+  learner_created: true
+- name: test/blue-reduced.png
+  visible: true
+  learner_created: true
+- name: test/small-reduced.png
+  visible: true
+  learner_created: true
+- name: test/trees-reduced.png
+  visible: true
+  learner_created: true
+feedback_link: https://hyperskill.org/projects/100/stages/555/implement#comment
+status: Solved
+feedback:
+  message: Congratulations!
+  time: Sun, 11 Apr 2021 16:01:55 UTC
+record: -1

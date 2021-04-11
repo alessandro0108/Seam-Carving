@@ -1,0 +1,468 @@
+type: edu
+custom_name: stage5
+files:
+- name: src/seamcarving/Main.kt
+  visible: true
+  text: |
+    package seamcarving
+
+    fun main() {
+        print("Hello, World!")
+    }
+  learner_created: false
+- name: test/SeamCarvingTest.java
+  visible: false
+  text: |
+    import org.apache.commons.codec.binary.Hex;
+    import org.hyperskill.hstest.testcase.TestCase;
+    import org.hyperskill.hstest.stage.StageTest;
+    import org.hyperskill.hstest.testcase.CheckResult;
+
+    import javax.imageio.ImageIO;
+    import java.awt.*;
+    import java.awt.image.BufferedImage;
+    import java.io.ByteArrayOutputStream;
+    import java.io.File;
+    import java.io.FileInputStream;
+    import java.io.IOException;
+    import java.security.MessageDigest;
+    import java.security.NoSuchAlgorithmException;
+    import java.util.ArrayList;
+    import java.util.Arrays;
+    import java.util.List;
+
+    class CheckFailException extends Exception {
+        public CheckFailException(String s) {
+            super(s);
+        }
+    }
+
+    class Image {
+        private BufferedImage image;
+
+        Image(String filename) throws IOException {
+            image = ImageIO.read(new File(filename));
+        }
+
+        private int dx2(int x, int y) {
+            if (x == 0) {
+                return dx2(x + 1, y);
+            }
+            else if (x == image.getWidth() - 1) {
+                return dx2(x - 1, y);
+            }
+            else {
+                Color l = new Color(image.getRGB(x - 1, y));
+                Color r = new Color(image.getRGB(x + 1, y));
+                return (l.getRed() - r.getRed()) * (l.getRed() - r.getRed()) +
+                    (l.getGreen() - r.getGreen()) * (l.getGreen() - r.getGreen()) +
+                    (l.getBlue() - r.getBlue()) * (l.getBlue() - r.getBlue());
+            }
+        }
+
+        private int dy2(int x, int y) {
+            if (y == 0) {
+                return dy2(x, y + 1);
+            }
+            else if (y == image.getHeight() - 1) {
+                return dy2(x, y - 1);
+            }
+            else {
+                Color t = new Color(image.getRGB(x, y - 1));
+                Color b = new Color(image.getRGB(x, y + 1));
+                return (t.getRed() - b.getRed()) * (t.getRed() - b.getRed()) +
+                    (t.getGreen() - b.getGreen()) * (t.getGreen() - b.getGreen()) +
+                    (t.getBlue() - b.getBlue()) * (t.getBlue() - b.getBlue());
+            }
+        }
+
+        public double pixelEnergy(int x, int y) {
+            return Math.sqrt((double)dx2(x, y) + (double)dy2(x, y));
+        }
+
+        public List<Integer> findHorizontalSeam() throws CheckFailException {
+            ArrayList<Integer> result = new ArrayList<Integer>();
+            for (int x = 0; x < image.getWidth(); x++) {
+                boolean found = false;
+
+                for (int y = 0; y < image.getHeight(); y++) {
+                    Color c = new Color(image.getRGB(x, y));
+                    if (c.equals(Color.RED)) {
+                        result.add(y);
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                    throw new CheckFailException(String.format("Could not find seam pixel in column (%d)", x));
+            }
+            return result;
+        }
+    }
+
+    class OutFile {
+        String hash;
+        String inFileName;
+        String outFilename;
+        int width;
+        int height;
+
+        Double seamSum;
+
+        OutFile(String inFileName, String outFilename, int width, int height, String hash, Double sum) {
+            this.inFileName = inFileName;
+            this.outFilename = outFilename;
+            this.width = width;
+            this.height = height;
+            this.hash = hash;
+            this.seamSum = sum;
+        }
+
+        public void checkSum() throws CheckFailException {
+            try {
+                double delta = 0.00001;
+
+                Image input = new Image(inFileName);
+                Image output = new Image(outFilename);
+
+                double actualSum = 0;
+                List<Integer> seam = output.findHorizontalSeam();
+                for (int x = 0; x < seam.size(); x++) {
+                    int y = seam.get(x);
+                    actualSum += input.pixelEnergy(x, y);
+                }
+
+                if (actualSum < seamSum - delta || actualSum > seamSum + delta) {
+                    throw new CheckFailException(
+                        String.format(
+                            "Total energy of your seam (%f) does not match expected value (%f +/- %f)",
+                            actualSum, seamSum, delta));
+                }
+
+            } catch (IOException e) {
+                throw new CheckFailException(
+                    String.format(
+                        "Could not read output file '%s'. Please check you produce output file",
+                        outFilename));
+            }
+        }
+
+        public boolean compareWithActualMD5() throws CheckFailException {
+            try {
+                File imgPath = new File(outFilename);
+                BufferedImage sourceImage = ImageIO.read(imgPath);
+
+                BufferedImage rgbImage =
+                    new BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+                for (int i = 0; i < sourceImage.getWidth(); i++) {
+                    for (int j = 0; j < sourceImage.getHeight(); j++) {
+                        rgbImage.setRGB(i, j, sourceImage.getRGB(i, j));
+                    }
+                }
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ImageIO.write(rgbImage, "bmp", baos);
+
+                MessageDigest md = MessageDigest.getInstance("MD5");
+                md.update(baos.toByteArray());
+                byte[] digest = md.digest();
+                String actualHash = Hex.encodeHexString(digest);
+                if (!actualHash.equalsIgnoreCase(hash)) {
+                    throw new CheckFailException(
+                        String.format(
+                            "Hash sum of your image (%s) does not match expected value",
+                            actualHash));
+                }
+            } catch (IOException e) {
+                throw new CheckFailException(
+                    String.format(
+                        "Could not read output file '%s'. Please check you produce output file",
+                        outFilename));
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+                throw new CheckFailException("Internal test error. please report to Hyperskill team");
+            }
+
+            return true;
+        }
+
+        public boolean compareActualDimensions() throws CheckFailException {
+            try {
+                BufferedImage image = ImageIO.read(new File(outFilename));
+
+                if (image == null) {
+                    throw new CheckFailException(
+                        String.format(
+                            "File format error. Looks like your output '%s' is not a valid image file.",
+                            outFilename));
+                }
+
+                if (image.getWidth() != width) {
+                    throw new CheckFailException(
+                        String.format(
+                            "Dimensions mismatch. Output image width: %d; expected width: %d",
+                            image.getWidth(), width));
+                }
+
+                if (image.getHeight() != height) {
+                    throw new CheckFailException(
+                        String.format(
+                            "Dimensions mismatch. Output image height: %d; expected height: %d",
+                            image.getHeight(), height));
+                }
+
+            } catch (IOException e) {
+                throw new CheckFailException(
+                    String.format(
+                        "Could not read output file '%s'. Please check you produce output file",
+                        outFilename));
+            }
+
+            return true;
+        }
+    }
+
+    public class SeamCarvingTest extends StageTest<OutFile> {
+
+        @Override
+        public List<TestCase<OutFile>> generate() {
+
+            return Arrays.asList(
+                new TestCase<OutFile>()
+                    .addArguments("-in", "test/small.png", "-out", "test/small-seam-hor.png")
+                    .setAttach(new OutFile("test/small.png", "test/small-seam-hor.png",
+                        15, 10,
+                        "91d48b32789908d7826a32e1304a4ddc", 1136.850201)),
+
+                new TestCase<OutFile>()
+                    .addArguments("-in", "test/blue.png", "-out", "test/blue-seam-hor.png")
+                    .setAttach(new OutFile("test/blue.png", "test/blue-seam-hor.png",
+                        500, 334,
+                        "b9070275c8a22db340162d2419fa13fe", 327.257757)),
+
+                new TestCase<OutFile>()
+                    .addArguments("-in", "test/trees.png", "-out", "test/trees-seam-hor.png")
+                    .setAttach(new OutFile("test/trees.png", "test/trees-seam-hor.png",
+                        600, 429,
+                        "69ed6abd2487d46df650cbe46d577dc7", 115.903883))
+            );
+        }
+
+        @Override
+        public CheckResult check(String reply, OutFile expectedFile) {
+            try {
+                expectedFile.compareActualDimensions();
+                //expectedFile.compareWithActualMD5();
+                expectedFile.checkSum();
+            } catch (CheckFailException e) {
+                return CheckResult.wrong(e.getMessage());
+            }
+
+            return CheckResult.correct();
+        }
+    }
+  learner_created: false
+- name: test/blue.png
+  visible: false
+  learner_created: false
+- name: test/small.png
+  visible: false
+  learner_created: false
+- name: test/trees.png
+  visible: false
+  learner_created: false
+- name: src/seamcarving/SeamFinder.kt
+  visible: true
+  text: |-
+    package seamcarving
+
+    class SeamFinder(val matrix: Array<Array<EnergyPoint>>) {
+        fun getVerticalSeam(): IntArray {
+            val INF = Double.MAX_VALUE
+            val workingMatrix = Array(matrix.size) { Array<EnergyPoint>(size = matrix[0].size) { EnergyPoint() } }
+
+            // calculates the cumulative energy matrix: each pixel's energy is summed to the minimum
+            // energy of the 3 pixels above it (coordinates j-1, j, j+1)
+            for (i in matrix.indices)
+                for (j in matrix[0].indices) {
+                    if (i == 0)
+                        workingMatrix[i][j].energy = matrix[i][j].energy
+                    else {
+                        val aboveEnergy = workingMatrix[i -1][j].energy
+                        val aboveLeftEnergy = if (j > 0) workingMatrix[i - 1][j - 1].energy else INF
+                        val aboveRightEnergy = if (j < workingMatrix[0].size - 1) workingMatrix[i - 1][j + 1].energy else INF
+
+                        var minEnergy = aboveEnergy
+                        var minJ = j
+                        if (aboveLeftEnergy < minEnergy) {
+                            minEnergy = aboveLeftEnergy
+                            minJ = j - 1
+                        }
+                        if (aboveRightEnergy < minEnergy) {
+                            minEnergy = aboveRightEnergy
+                            minJ = j + 1
+                        }
+                        workingMatrix[i][j].energy = matrix[i][j].energy + minEnergy
+                        workingMatrix[i][j].prevX = minJ
+                    }
+                }
+
+            // the lowest energy seam is the one with the minimum cumulative energy in the last row
+            // of the matrix
+            var minEnergy = INF
+            var minJ = -1
+            val lastRowIndex = workingMatrix.size - 1
+            for (j in workingMatrix[0].indices) {
+                 if (workingMatrix[lastRowIndex][j].energy < minEnergy) {
+                    minJ = j
+                    minEnergy = workingMatrix[lastRowIndex][j].energy
+                }
+            }
+            println("minEnergy = $minEnergy; minJ = $minJ")
+
+            val seamArray = IntArray(workingMatrix.size)
+            seamArray[lastRowIndex] = minJ
+            var seamEnergy = workingMatrix[lastRowIndex][minJ].energy
+
+            for (i in lastRowIndex - 1 downTo 0) {
+                seamArray[i] = workingMatrix[i + 1][seamArray[i + 1]].prevX
+                seamEnergy += matrix[i][seamArray[i]].energy
+            }
+
+            println("seamEnergy = $seamEnergy")
+
+
+            val s = "1" + 2 + '3'
+            return seamArray
+        }
+    }
+  learner_created: true
+- name: src/seamcarving/EnergyCalculator.kt
+  visible: true
+  text: |-
+    package seamcarving
+
+    import java.awt.Color
+    import java.awt.image.BufferedImage
+
+    class EnergyCalculator(val image: BufferedImage) {
+        var maxEnergy: Double = 0.0
+        val energyMatrix = Array(image.height) { Array<EnergyPoint>(size = image.width) { EnergyPoint() } }
+
+        fun calcEnergyMatrix() {
+            maxEnergy = 0.0
+
+            for (x in 0 until image.getWidth())
+                for (y in 0 until image.getHeight()) {
+                    val energy: Double = getEnergy(x, y)
+                    if (energy > maxEnergy) {
+                        maxEnergy = energy
+                    }
+                    energyMatrix[y][x].energy = energy
+                }
+        }
+
+        fun getTestEnergyMatrix1(): Array<Array<EnergyPoint>> {
+            val test1e = arrayOf(
+                    arrayOf(5, 5, 3, 5),
+                    arrayOf(3, 3, 4, 4),
+                    arrayOf(4, 6, 0, 2),
+                    arrayOf(1, 5, 4, 0),
+                    arrayOf(3, 4, 4, 0),
+            )       // seam: 3, 3, 0, 0, 0
+
+            return createTestEnergyMatrix(test1e)
+        }
+
+        fun getTestEnergyMatrix2(): Array<Array<EnergyPoint>> {
+            val test1e = arrayOf(
+                    arrayOf(1, 4, 3, 5, 2),
+                    arrayOf(3, 2, 5, 2, 3),
+                    arrayOf(5, 2, 4, 2, 1),
+            )       // seam: 1, 2, 2
+
+            return createTestEnergyMatrix(test1e)
+        }
+
+        private fun createTestEnergyMatrix(testMatrix: Array<Array<Int>>): Array<Array<EnergyPoint>> {
+            val matrix = Array(testMatrix.size) { Array<EnergyPoint>(testMatrix[0].size) { EnergyPoint() } }
+
+            for (i in testMatrix.indices)
+                for (j in testMatrix[0].indices)
+                    matrix[i][j].energy = testMatrix[i][j].toDouble()
+
+            return matrix
+        }
+
+        private fun getEnergy(x: Int, y: Int): Double {
+            val gradX: Double = getGradientX(x, y)
+            val gradY: Double = getGradientY(x, y)
+            return Math.sqrt(gradX + gradY)
+        }
+
+        private fun getGradientX(x: Int, y: Int): Double {
+            val x1 = adjustBorderX(x)
+            val c1 = Color(image.getRGB(x1 + 1, y))
+            val c2 = Color(image.getRGB(x1 - 1, y))
+            return getSquareGradient(c1, c2)
+        }
+
+        private fun getGradientY(x: Int, y: Int): Double {
+            val y1 = adjustBorderY(y)
+            val c1 = Color(image.getRGB(x, y1 + 1))
+            val c2 = Color(image.getRGB(x, y1 - 1))
+            return getSquareGradient(c1, c2)
+        }
+
+        private fun adjustBorderX(x: Int): Int {
+            return when (x) {
+                0 -> x + 1;
+                image.width - 1 -> x - 1
+                else -> x
+            }
+        }
+
+        private fun adjustBorderY(y: Int): Int {
+            return when (y) {
+                0 -> y + 1;
+                image.height - 1 -> y - 1
+                else -> y
+            }
+        }
+
+        private fun getSquareGradient(c1: Color, c2: Color): Double {
+            return Math.pow((c1.red - c2.red).toDouble(), 2.0) +
+                    Math.pow((c1.green - c2.green).toDouble(), 2.0) +
+                    Math.pow((c1.blue - c2.blue).toDouble(), 2.0)
+        }
+
+
+
+    }
+  learner_created: true
+- name: src/seamcarving/EnergyPoint.kt
+  visible: true
+  text: |-
+    package seamcarving
+
+    class EnergyPoint {
+        var energy: Double = 0.0
+        var prevX = -1
+    }
+  learner_created: true
+- name: test/blue-seam-hor.png
+  visible: true
+  learner_created: true
+- name: test/trees-seam-hor.png
+  visible: true
+  learner_created: true
+- name: test/small-seam-hor.png
+  visible: true
+  learner_created: true
+feedback_link: https://hyperskill.org/projects/100/stages/554/implement#comment
+status: Solved
+feedback:
+  message: Congratulations!
+  time: Sat, 10 Apr 2021 15:57:08 UTC
+record: 5
